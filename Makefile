@@ -1,9 +1,28 @@
-VERSION := $(shell git describe --tags | sed -ne 's/[^0-9]*\(\([0-9]\.\)\{0,4\}[0-9]\)[^.].*/\1/p')
-REMOTE := $(shell git remote -v | sed -n '/github.com.*push/{s/^[^[:space:]]\+[[:space:]]git@github.com\+//;s|:||;s/\.git.*//;p}')
+SHELL := /bin/sh
+OUT := $(shell pwd)/_out
+BUILDARCH := $(shell uname -m)
+GCC := $(OUT)/$(BUILDARCH)-linux-musl-cross/bin/$(BUILDARCH)-linux-musl-gcc
+LD := $(OUT)/$(BUILDARCH)-linux-musl-cross/bin/$(BUILDARCH)-linux-musl-ld
 
-docker-build:
-	./tools/docker-buildx \
-		build \
-			--platform linux/arm64 \
-			-f ./Dockerfile \
-			-t ghcr.io/$(REMOTE):$(VERSION) .
+clean-compile: clean musl deps compile
+
+compile:
+	CGO_ENABLED=1 \
+	CC_FOR_TARGET=$(GCC) \
+	CC=$(GCC) \
+	go build \
+		-ldflags '-linkmode external -extldflags -static' \
+		-a -o _out/unbound_explorer .
+
+deps:
+	go mod tidy -v
+	go mod download
+
+musl:
+	(cd $(OUT); curl -LOk https://musl.cc/$(BUILDARCH)-linux-musl-cross.tgz)
+	tar zxf $(OUT)/$(BUILDARCH)-linux-musl-cross.tgz -C $(OUT)
+
+clean:
+	rm -Rf $(OUT) $(BINARY_NAME)
+	mkdir -p $(OUT)
+	touch $(OUT)/.keep

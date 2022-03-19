@@ -1,15 +1,17 @@
-FROM golang:1.17.3 as builder
+FROM golang:1.17-alpine3.14 AS builder
 
-WORKDIR /workspace/
+RUN apk add --no-cache \
+  build-base \
+  make \
+  curl
 
-COPY go.mod go.mod
-COPY go.sum go.sum
-RUN go mod download
+WORKDIR /workspace
+RUN mkdir _out
 
-COPY . .
-RUN go build -o unbound_exporter ./
+COPY go.mod go.sum Makefile unbound_exporter.go ./
+RUN make clean-compile
 
 FROM scratch
-COPY --from=builder /workspace/unbound_exporter unbound_exporter
+COPY --from=builder /workspace/_out/unbound_exporter /usr/local/bin/unbound_exporter
 
-ENTRYPOINT [ "/unbound_exporter" ]
+ENTRYPOINT ["auditor"]
