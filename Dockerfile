@@ -12,6 +12,6 @@ COPY go.mod go.sum Makefile unbound_exporter.go ./
 RUN make clean-compile
 
 FROM scratch
-COPY --from=builder /workspace/_out/unbound_exporter /usr/local/bin/unbound_exporter
+COPY --from=builder /workspace/_out/unbound_explorer /usr/local/bin/unbound_exporter
 
-ENTRYPOINT ["auditor"]
+ENTRYPOINT ["unbound_exporter"]
