@@ -8,8 +8,8 @@ jobs:
   build:
     runs-on: ubuntu-18.04
     env:
-      CONTAINER_IMAGE: ghcr.io/${{github.repository}}/unbound_explorer
-      DOCKER_VERSION: $(git tag --points-at HEAD | sed 's/v//g')
+      CONTAINER_IMAGE: ghcr.io/${{github.repository}}
+      DOCKER_VERSION: ${{github.ref_name}}
       DOCKER_TARGET_PLATFORM: linux/arm64,linux/amd64
     steps:
       -
